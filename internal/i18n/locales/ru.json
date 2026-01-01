@@ -1,0 +1,20 @@
+{
+  "trayTitle": "Проверка доступности сайтов",
+  "trayTooltip": "Мониторинг сайтов",
+  "menuCheckNow": "Проверить сейчас",
+  "menuStatus": "Статус: Не проверялось",
+  "menuSettings": "Настройки",
+  "menuViewLog": "Просмотр лога",
+  "menuPause": "Пауза",
+  "menuResume": "Возобновить",
+  "menuRestart": "Перезапустить",
+  "menuQuit": "Выход",
+  "statusOk": "✅ OK ({time})",
+  "statusError": "⚠️ {count} ошибок ({time})",
+  "notificationConfigLoadErrorTitle": "Ошибка загрузки конфигурации",
+  "notificationConfigLoadedTitle": "Конфигурация загружена",
+  "notificationSuccessTitle": "Все сайты доступны",
+  "notificationSuccessBody": "Все отслеживаемые сайты ответили успешно.",
+  "notificationFailTitle": "{count} сайтов недоступно",
+  "notificationFailBody": "Проверьте лог для получения подробной информации."
+}

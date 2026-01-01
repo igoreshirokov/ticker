@@ -28,6 +28,7 @@ type Notifications struct {
 type GeneralConfig struct {
 	CheckInterval    int `yaml:"check_interval"`
 	ConcurrentChecks int `yaml:"concurrent_checks"`
+	Lang             string `yaml:"lang"`
 }
 
 type CheckResult struct {

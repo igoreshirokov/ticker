@@ -1,0 +1,21 @@
+{
+  "trayTitle": "Website Availability Check",
+  "trayTooltip": "Site Monitoring",
+  "menuCheckNow": "Check Now",
+  "menuStatus": "Status: Not checked yet",
+  "menuSettings": "Settings",
+  "menuViewLog": "View Log",
+  "menuPause": "Pause",
+  "menuResume": "Resume",
+  "menuRestart": "Restart",
+  "menuQuit": "Quit",
+  "statusOk": "✅ OK ({time})",
+  "statusError": "⚠️ {count} errors ({time})",
+  "notificationConfigLoadErrorTitle": "Config Load Error",
+  "notificationConfigLoadedTitle": "Configuration Loaded",
+  "notificationSuccessTitle": "All sites are available",
+  "notificationSuccessBody": "All monitored sites responded successfully.",
+  "notificationFailTitle": "{count} sites unavailable",
+  "notificationFailBody": "Check the log for more details.",
+  "flagConfigPapth": "Path to the configuration file"
+}
