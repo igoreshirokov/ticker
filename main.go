@@ -77,7 +77,6 @@ func main() {
 	currentDir = filepath.Dir(currentDir)
 	defaultConfig := filepath.Join(currentDir, "config.yml")
 	configFile := flag.String("config", defaultConfig, "Путь к файлу конфигурации")
-	once := flag.Bool("once", false, "Выполнить только одну проверку и выйти")
 	verboseFlag := flag.Bool("v", false, "Подробный вывод")
 
 	flag.Parse()
@@ -94,25 +93,8 @@ func main() {
 	// Сохраняем флаг verbose
 	verbose = *verboseFlag
 
-	if *once {
-		runSingleCheck(verbose)
-		return
-	}
-
 	// Запуск в режиме с иконкой в трее
 	runWithTray()
-}
-
-func runSingleCheck(verbose bool) {
-	results := checkAllSites(config, verbose)
-	printResults(results)
-	
-	allOK := allSitesOK(results)
-	if allOK {
-		sendSuccessNotification(config)
-	} else {
-		sendFailNotification(config, getFailedResults(results))
-	}
 }
 
 func runWithTray() {
@@ -483,11 +465,4 @@ func sendFailNotification(config *Config, failedResults []CheckResult) {
 			result.Site.Name, statusText, duration)
 	}
 	beeep.Alert(title, msg, "assets/danger.ico")
-}
-
-func printResults(results []CheckResult) {
-	for _, result := range results {
-		fmt.Printf("Результат проверки %s: %v (статус код: %d, время: %v)\n", 
-			result.Site.Name, result.Success, result.StatusCode, result.Duration)
-	}
 }
