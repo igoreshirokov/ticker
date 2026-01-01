@@ -20,7 +20,7 @@ type CheckResult struct {
 }
 
 
-func CheckSite(site *config.SiteConfig, verbose bool) CheckResult {
+func CheckSite(site *config.SiteConfig) CheckResult {
 	start := time.Now()
 	client := &http.Client{
 		Timeout: time.Duration(site.Timeout) * time.Second,
@@ -63,11 +63,7 @@ func CheckSite(site *config.SiteConfig, verbose bool) CheckResult {
 	}
 
 	success := resp.StatusCode >= 200 && resp.StatusCode < 300
-	
-	if verbose {
-		fmt.Printf("[DEBUG] %s: %d %s (%v)\n", 
-			site.Name, resp.StatusCode, http.StatusText(resp.StatusCode), time.Since(start))
-	}
+
 
 	return CheckResult{
 		Site:       *site,
@@ -78,7 +74,7 @@ func CheckSite(site *config.SiteConfig, verbose bool) CheckResult {
 	}
 }
 
-func CheckAllSites(configuration *config.Config, verbose bool) []CheckResult {
+func CheckAllSites(configuration *config.Config) []CheckResult {
 	var wg sync.WaitGroup
 	results := make([]CheckResult, len(configuration.Sites))
 	semaphore := make(chan struct{}, configuration.General.ConcurrentChecks)
@@ -89,7 +85,7 @@ func CheckAllSites(configuration *config.Config, verbose bool) []CheckResult {
 			defer wg.Done()
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
-			results[idx] = CheckSite(&site, verbose)
+			results[idx] = CheckSite(&site)
 		}(i, site)
 	}
 
