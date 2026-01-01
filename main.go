@@ -16,7 +16,6 @@ import (
 
 	"github.com/gen2brain/beeep"
 	"github.com/getlantern/systray"
-	"golang.org/x/sys/windows/svc"
 	"gopkg.in/yaml.v3"
 )
 
@@ -59,6 +58,7 @@ var (
 	stopChan        chan bool
 	mutex           sync.RWMutex
 	verbose         bool
+	configFile 		*string
 	appName = 		"Мониторинг сайтов"
 )
 
@@ -76,7 +76,7 @@ func main() {
 	}
 	currentDir = filepath.Dir(currentDir)
 	defaultConfig := filepath.Join(currentDir, "config.yml")
-	configFile := flag.String("config", defaultConfig, "Путь к файлу конфигурации")
+	configFile = flag.String("config", defaultConfig, "Путь к файлу конфигурации")
 	verboseFlag := flag.Bool("v", false, "Подробный вывод")
 
 	flag.Parse()
@@ -211,7 +211,7 @@ func updateStatus(results []CheckResult, statusItem *systray.MenuItem) {
 		statusItem.SetIcon(iconGood)
 		statusItem.SetTitle(fmt.Sprintf("✅ OK (%s)", lastCheckTime.Format("15:04")))
 		if config.Notifications.ShowPopup {
-			beeep.Notify("✅ OK", fmt.Sprintf("Все сайты доступны (%s)", lastCheckTime.Format("15:04")), "")
+			sendSuccessNotification(config)
 		}
 	} else {
 		systray.SetIcon(iconBad)
@@ -251,21 +251,10 @@ func formatResults(results []CheckResult) string {
 	return output
 }
 
-// Функции для работы с иконками
-func getIconData(path string) []byte {
-	// Чтение иконки из файла
-	iconData, err := os.ReadFile(path)
-	if err != nil {
-		fmt.Printf("Ошибка чтения иконки %s: %v\n", path, err)
-		return nil
-	}
-	return iconData
-}
-
 // Вспомогательные функции
 func openConfigFile() {
 	// Открыть файл конфигурации в блокноте
-	exec.Command("notepad.exe", "config.yml").Start()
+	exec.Command("notepad.exe", *configFile).Start()
 }
 
 func showLog() {
@@ -289,53 +278,6 @@ func restartApp() {
 	exe, _ := os.Executable()
 	exec.Command(exe).Start()
 	os.Exit(0)
-}
-
-type service struct{}
-
-func (s *service) Execute(args []string, r <-chan svc.ChangeRequest, changes chan<- svc.Status) (bool, uint32) {
-	changes <- svc.Status{State: svc.StartPending}
-	
-	// Загрузка конфигурации
-	var err error
-	config, err = loadConfig("config.yml")
-	if err != nil {
-		return false, 1
-	}
-	
-	// Запуск фоновой проверки
-	stopChan = make(chan bool)
-	go func() {
-		ticker := time.NewTicker(time.Duration(config.General.CheckInterval) * time.Second)
-		for {
-			select {
-			case <-ticker.C:
-				checkAllSites(config, false)
-			case <-stopChan:
-				ticker.Stop()
-				return
-			}
-		}
-	}()
-	
-	changes <- svc.Status{State: svc.Running}
-	
-	// Ожидание команд
-	for {
-		select {
-		case c := <-r:
-			switch c.Cmd {
-			case svc.Stop, svc.Shutdown:
-				changes <- svc.Status{State: svc.StopPending}
-				if stopChan != nil {
-					close(stopChan)
-				}
-				return false, 0
-			case svc.Interrogate:
-				changes <- c.CurrentStatus
-			}
-		}
-	}
 }
 
 func loadConfig(filename string) (*Config, error) {
@@ -445,7 +387,7 @@ func sendSuccessNotification(config *Config) {
 		return
 	}
 	
-	beeep.Notify("Проверка доступности", "✅ Все сайты работают нормально!", "assets/info.ico")
+	beeep.Notify("Проверка доступности", "✅ Все сайты работают нормально!", iconGood)
 }
 
 func sendFailNotification(config *Config, failedResults []CheckResult) {
@@ -464,5 +406,5 @@ func sendFailNotification(config *Config, failedResults []CheckResult) {
 		msg += fmt.Sprintf("• %s: %s (время: %v)\n", 
 			result.Site.Name, statusText, duration)
 	}
-	beeep.Alert(title, msg, "assets/danger.ico")
+	beeep.Alert(title, msg, iconBad)
 }

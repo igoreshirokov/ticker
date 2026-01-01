@@ -14,3 +14,4 @@ notifications:
 general:
   check_interval: 3600
   concurrent_checks: 3
+  autostart: true # Автоматический запуск программы при старте системы. По умолчанию true.
