@@ -10,12 +10,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gen2brain/beeep"
 	"github.com/getlantern/systray"
 
 	"website-checker/internal/app"
 	"website-checker/internal/checker"
 	"website-checker/internal/config"
+	"website-checker/internal/notification"
 )
 
 // Глобальные переменные для управления
@@ -47,16 +47,17 @@ func main() {
 	verboseFlag := flag.Bool("v", false, "Подробный вывод")
 
 	flag.Parse()
-	beeep.AppName = appName
+
 
 	// Загрузка конфигурации
 	cfg, err = config.Load(*configFile)
 	if err != nil {
-		beeep.Alert("Проверка конфигурации", "Ошибка загрузки: \n" + err.Error(), "")
+		notification.Error("Ошибка загрузки конфигурации", err.Error())
 		os.Exit(1)
 	}
 
-	beeep.Notify("Проверка конфигурации", fmt.Sprintf("Загружено %d сайтов для проверки\n", len(cfg.Sites)), "")
+	notification.Init(app.AppName)
+	notification.SendConfigLoaded(*cfg)
 	// Сохраняем флаг verbose
 	verbose = *verboseFlag
 
@@ -117,7 +118,7 @@ func onReady() {
 				openConfigFile()
 				
 			case <-mViewLog.ClickedCh:
-				showLog()
+				notification.ShowLog(lastCheckResult)
 				
 			case <-mPause.ClickedCh:
 				togglePause(mPause)
@@ -178,14 +179,14 @@ func updateStatus(results []checker.CheckResult, statusItem *systray.MenuItem) {
 		statusItem.SetIcon(iconGood)
 		statusItem.SetTitle(fmt.Sprintf("✅ OK (%s)", lastCheckTime.Format("15:04")))
 		if cfg.Notifications.ShowPopup {
-			sendSuccessNotification(cfg)
+			notification.SendSuccess(cfg)
 		}
 	} else {
 		systray.SetIcon(iconBad)
 		statusItem.SetIcon(iconBad)
 		statusItem.SetTitle(fmt.Sprintf("⚠️ %d ошибок (%s)", len(failed), lastCheckTime.Format("15:04")))
 		if cfg.Notifications.ShowPopup {
-			sendFailNotification(cfg, failed)
+			notification.SendFail(cfg, failed)
 		}
 	}
 	
@@ -224,10 +225,7 @@ func openConfigFile() {
 	exec.Command("notepad.exe", *configFile).Start()
 }
 
-func showLog() {
-	// Показать лог проверок
-	beeep.Alert("История проверок", lastCheckResult, "")
-}
+
 
 func togglePause(menuItem *systray.MenuItem) {
 	mutex.Lock()
@@ -247,29 +245,3 @@ func restartApp() {
 	os.Exit(0)
 }
 
-func sendSuccessNotification(config *config.Config) {
-	if !config.Notifications.ShowPopup {
-		return
-	}
-	
-	beeep.Notify("Проверка доступности", "✅ Все сайты работают нормально!", iconGood)
-}
-
-func sendFailNotification(config *config.Config, failedResults []checker.CheckResult) {
-	if !config.Notifications.ShowPopup || len(failedResults) == 0 {
-		return
-	}
-	beeep.AppName = appName
-	title := "Проверка доступности"
-	msg := "⚠️ Обнаружены проблемы с сайтами:\n\n"
-	for _, result := range failedResults {
-		statusText := "ОШИБКА"
-		if result.StatusCode > 0 {
-			statusText = fmt.Sprintf("Статус: %d", result.StatusCode)
-		}
-		duration := result.Duration.Round(time.Millisecond)
-		msg += fmt.Sprintf("• %s: %s (время: %v)\n", 
-			result.Site.Name, statusText, duration)
-	}
-	beeep.Alert(title, msg, iconBad)
-}

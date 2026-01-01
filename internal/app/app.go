@@ -8,3 +8,5 @@ import (
 var IconBad []byte
 //go:embed assets/info.ico
 var IconGood []byte
+
+var AppName = "Мониторинг сайтов"
