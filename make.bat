@@ -1,1 +1,1 @@
-go build -ldflags="-s -w -H windowsgui" -o dist/website-checker.exe
+go build -ldflags="-s -w -H windowsgui" -o dist/ticker.exe

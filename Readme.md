@@ -23,9 +23,11 @@ notifications:
   cnsole_output: true
 
 general:
-  check_interval: 3600
+  check_interval: 3600 # Интервал проверки сайтов в секундах. По умолчанию 1 час.
   concurrent_checks: 3
 ```
 
-Файл должен быть расположен рядом с исполняемым файлом `website-checker.exe`.
+Файл должен быть расположен рядом с исполняемым файлом `ticker.exe`.
 
+## Иконки
+Иконки внедряются в исполняемый файл `ticker.exe`.
