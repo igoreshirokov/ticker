@@ -1,13 +1,9 @@
 package main
 
 import (
-	"crypto/tls"
-	_ "embed"
 	"flag"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -18,16 +14,9 @@ import (
 	"github.com/getlantern/systray"
 
 	"website-checker/internal/app"
+	"website-checker/internal/checker"
 	"website-checker/internal/config"
 )
-
-type CheckResult struct {
-	Site       config.SiteConfig
-	Success    bool
-	StatusCode int
-	Error      string
-	Duration   time.Duration
-}
 
 // Глобальные переменные для управления
 var (
@@ -117,7 +106,7 @@ func onReady() {
 				checking = true
 				mutex.Unlock()
 				
-				results := checkAllSites(cfg, verbose)
+				results := checker.CheckAllSites(cfg, verbose)
 				updateStatus(results, mStatus)
 				
 				mutex.Lock()
@@ -156,7 +145,7 @@ func backgroundChecker(statusItem *systray.MenuItem) {
 	defer ticker.Stop()
 	
 	// Первая проверка сразу при старте
-	results := checkAllSites(cfg, verbose)
+	results := checker.CheckAllSites(cfg, verbose)
 	updateStatus(results, statusItem)
 	
 	for {
@@ -167,7 +156,7 @@ func backgroundChecker(statusItem *systray.MenuItem) {
 			mutex.RUnlock()
 			
 			if !isChecking {
-				results := checkAllSites(cfg, verbose)
+				results := checker.CheckAllSites(cfg, verbose)
 				updateStatus(results, statusItem)
 			}
 			
@@ -177,7 +166,7 @@ func backgroundChecker(statusItem *systray.MenuItem) {
 	}
 }
 
-func updateStatus(results []CheckResult, statusItem *systray.MenuItem) {
+func updateStatus(results []checker.CheckResult, statusItem *systray.MenuItem) {
 	lastCheckTime = time.Now()
 	
 	failed := getFailedResults(results)
@@ -206,8 +195,8 @@ func updateStatus(results []CheckResult, statusItem *systray.MenuItem) {
 	mutex.Unlock()
 }
 
-func getFailedResults(results []CheckResult) []CheckResult {
-	var failed []CheckResult
+func getFailedResults(results []checker.CheckResult) []checker.CheckResult {
+	var failed []checker.CheckResult
 	for _, result := range results {
 		if !result.Success {
 			failed = append(failed, result)
@@ -216,7 +205,7 @@ func getFailedResults(results []CheckResult) []CheckResult {
 	return failed
 }
 
-func formatResults(results []CheckResult) string {
+func formatResults(results []checker.CheckResult) string {
 	var output string
 	for _, result := range results {
 		status := "✅"
@@ -258,92 +247,6 @@ func restartApp() {
 	os.Exit(0)
 }
 
-func checkAllSites(configuration *config.Config, verbose bool) []CheckResult {
-	var wg sync.WaitGroup
-	results := make([]CheckResult, len(configuration.Sites))
-	semaphore := make(chan struct{}, configuration.General.ConcurrentChecks)
-
-	for i, site := range configuration.Sites {
-		wg.Add(1)
-		go func(idx int, site config.SiteConfig) {
-			defer wg.Done()
-			semaphore <- struct{}{}
-			defer func() { <-semaphore }()
-			results[idx] = checkSite(&site, verbose)
-		}(i, site)
-	}
-
-	wg.Wait()
-	return results
-}
-
-func checkSite(site *config.SiteConfig, verbose bool) CheckResult {
-	start := time.Now()
-	client := &http.Client{
-		Timeout: time.Duration(site.Timeout) * time.Second,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: false},
-		},
-	}
-
-	req, err := http.NewRequest("GET", site.URL, nil)
-	if err != nil {
-		return CheckResult{
-			Site:     *site,
-			Success:  false,
-			Error:    fmt.Sprintf("Ошибка создания запроса: %v", err),
-			Duration: time.Since(start),
-		}
-	}
-
-	req.Header.Set("User-Agent", "WebsiteChecker/1.0")
-	resp, err := client.Do(req)
-	if err != nil {
-		return CheckResult{
-			Site:     *site,
-			Success:  false,
-			Error:    fmt.Sprintf("Ошибка соединения: %v", err),
-			Duration: time.Since(start),
-		}
-	}
-	defer resp.Body.Close()
-
-	_, err = io.CopyN(io.Discard, resp.Body, 4096)
-	if err != nil && err != io.EOF {
-		return CheckResult{
-			Site:       *site,
-			Success:    false,
-			StatusCode: resp.StatusCode,
-			Error:      fmt.Sprintf("Ошибка чтения ответа: %v", err),
-			Duration:   time.Since(start),
-		}
-	}
-
-	success := resp.StatusCode >= 200 && resp.StatusCode < 300
-	
-	if verbose {
-		fmt.Printf("[DEBUG] %s: %d %s (%v)\n", 
-			site.Name, resp.StatusCode, http.StatusText(resp.StatusCode), time.Since(start))
-	}
-
-	return CheckResult{
-		Site:       *site,
-		Success:    success,
-		StatusCode: resp.StatusCode,
-		Error:      "",
-		Duration:   time.Since(start),
-	}
-}
-
-func allSitesOK(results []CheckResult) bool {
-	for _, result := range results {
-		if !result.Success {
-			return false
-		}
-	}
-	return true
-}
-
 func sendSuccessNotification(config *config.Config) {
 	if !config.Notifications.ShowPopup {
 		return
@@ -352,7 +255,7 @@ func sendSuccessNotification(config *config.Config) {
 	beeep.Notify("Проверка доступности", "✅ Все сайты работают нормально!", iconGood)
 }
 
-func sendFailNotification(config *config.Config, failedResults []CheckResult) {
+func sendFailNotification(config *config.Config, failedResults []checker.CheckResult) {
 	if !config.Notifications.ShowPopup || len(failedResults) == 0 {
 		return
 	}
