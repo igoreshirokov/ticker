@@ -1,0 +1,1 @@
+go build -ldflags="-s -w -H windowsgui" -o dist/website-checker.exe
