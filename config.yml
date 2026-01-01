@@ -1,0 +1,22 @@
+sites:
+  - url: "https://google.com"
+    name: "Google"
+    timeout: 30
+
+  - url: "https://yandex.ru"
+    name: "Yandex"
+    timeout: 30
+
+  - url: "https://www.baidu.com"
+    name: "Baidu"
+    timeout: 30
+
+notifications:
+  show_popup: true
+  cnsole_output: true
+
+general:
+  check_interval: 60
+  concurrent_checks: 3
+
+  
