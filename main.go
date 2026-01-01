@@ -2,12 +2,15 @@ package main
 
 import (
 	"crypto/tls"
+	_ "embed"
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -56,29 +59,38 @@ var (
 	stopChan        chan bool
 	mutex           sync.RWMutex
 	verbose         bool
-	iconBad			[]byte
-	iconGood		[]byte
-	appName = "Мониторинг сайтов"
+	appName = 		"Мониторинг сайтов"
 )
 
+//go:embed assets/danger.ico
+var iconBad []byte
+//go:embed assets/info.ico
+var iconGood []byte
+
+
+
 func main() {
-	configFile := flag.String("config", "config.yml", "Путь к файлу конфигурации")
+	currentDir, err := os.Executable()
+	if err != nil {
+		log.Fatal(err)
+	}
+	currentDir = filepath.Dir(currentDir)
+	defaultConfig := filepath.Join(currentDir, "config.yml")
+	configFile := flag.String("config", defaultConfig, "Путь к файлу конфигурации")
 	once := flag.Bool("once", false, "Выполнить только одну проверку и выйти")
 	verboseFlag := flag.Bool("v", false, "Подробный вывод")
 
 	flag.Parse()
+	beeep.AppName = appName
 
 	// Загрузка конфигурации
-	var err error
 	config, err = loadConfig(*configFile)
 	if err != nil {
-		fmt.Printf("Ошибка загрузки конфигурации: %v\n", err)
+		beeep.Alert("Проверка конфигурации", "Ошибка загрузки: \n" + err.Error(), "")
 		os.Exit(1)
 	}
 
-	iconBad = getIconData("assets/danger.ico")
-	iconGood = getIconData("assets/info.ico")
-
+	beeep.Notify("Проверка конфигурации", fmt.Sprintf("Загружено %d сайтов для проверки\n", len(config.Sites)), "")
 	// Сохраняем флаг verbose
 	verbose = *verboseFlag
 
@@ -92,17 +104,13 @@ func main() {
 }
 
 func runSingleCheck(verbose bool) {
-	fmt.Printf("Загружено %d сайтов для проверки\n", len(config.Sites))
-	
 	results := checkAllSites(config, verbose)
 	printResults(results)
 	
 	allOK := allSitesOK(results)
 	if allOK {
-		fmt.Println("🎉 Все сайты работают нормально!")
 		sendSuccessNotification(config)
 	} else {
-		fmt.Println("⚠️ Обнаружены проблемы с некоторыми сайтами")
 		sendFailNotification(config, getFailedResults(results))
 	}
 }
@@ -221,7 +229,7 @@ func updateStatus(results []CheckResult, statusItem *systray.MenuItem) {
 		statusItem.SetIcon(iconGood)
 		statusItem.SetTitle(fmt.Sprintf("✅ OK (%s)", lastCheckTime.Format("15:04")))
 		if config.Notifications.ShowPopup {
-			sendSuccessNotification(config)
+			beeep.Notify("✅ OK", fmt.Sprintf("Все сайты доступны (%s)", lastCheckTime.Format("15:04")), "")
 		}
 	} else {
 		systray.SetIcon(iconBad)
@@ -454,7 +462,7 @@ func sendSuccessNotification(config *Config) {
 	if !config.Notifications.ShowPopup {
 		return
 	}
-	beeep.AppName = appName
+	
 	beeep.Notify("Проверка доступности", "✅ Все сайты работают нормально!", "assets/info.ico")
 }
 

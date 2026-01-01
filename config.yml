@@ -1,0 +1,16 @@
+sites:
+  - url: "https://itata.ru"
+    name: "yandex.ru"
+    timeout: 30
+
+  - url: "https://google.com"
+    name: "google.com"
+    timeout: 30
+
+notifications:
+  show_popup: true
+  cnsole_output: true
+
+general:
+  check_interval: 3600
+  concurrent_checks: 3
