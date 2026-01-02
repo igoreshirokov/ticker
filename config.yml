@@ -1,5 +1,5 @@
 sites:
-  - url: "https://itata.ru"
+  - url: "https://yandex.ru"
     name: "yandex.ru"
     timeout: 30
 
@@ -14,4 +14,4 @@ notifications:
 general:
   check_interval: 3600
   concurrent_checks: 3
-  autostart: true # Автоматический запуск программы при старте системы. По умолчанию true.
+  autostart: true # Автоматический запуск программы при старте системы. По умолчанию true. NOT IMPLEMENTED

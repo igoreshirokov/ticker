@@ -1,8 +1,11 @@
 package config
 
 import (
+	"flag"
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -39,7 +42,28 @@ type CheckResult struct {
 	Duration   time.Duration
 }
 
-func Load(filename string) (*Config, error) {
+func Load() (*Config, *string, error) {
+	currentDir, err := os.Executable()
+	if err != nil {
+		log.Fatal(err)
+	}
+	currentDir = filepath.Dir(currentDir)
+	defaultConfig := filepath.Join(currentDir, "config.yml")
+	configFile := flag.String("config", defaultConfig, "Путь к файлу конфигурации")
+
+	flag.Parse()
+
+	cfg, err := parse(*configFile)
+	if err != nil {
+		return nil, configFile, err
+	}
+
+	return cfg, configFile, nil
+}
+
+
+
+func parse(filename string) (*Config, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {

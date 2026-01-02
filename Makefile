@@ -1,5 +1,5 @@
-BINARY_NAME=ticker.exe
-APP_DIR=./cmd/ticker
+BINARY_NAME=website-checker.exe
+APP_DIR=./cmd/website-checker
 LDFLAGS=-ldflags="-s -w -H windowsgui"
 
 all: build
