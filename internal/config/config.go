@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"website-checker/internal/i18n"
 
 	"gopkg.in/yaml.v3"
 )
@@ -49,7 +50,7 @@ func Load() (*Config, *string, error) {
 	}
 	currentDir = filepath.Dir(currentDir)
 	defaultConfig := filepath.Join(currentDir, "config.yml")
-	configFile := flag.String("config", defaultConfig, "Путь к файлу конфигурации")
+	configFile := flag.String("config", defaultConfig, "Path to configuration file (default: ./config.yml)")
 
 	flag.Parse()
 
@@ -67,7 +68,7 @@ func parse(filename string) (*Config, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("файл конфигурации %s не найден", filename)
+			return nil, fmt.Errorf(i18n.T("config_filepath", filename))
 		}
 		return nil, err
 	}

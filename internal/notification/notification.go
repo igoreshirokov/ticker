@@ -6,59 +6,64 @@ import (
 	"website-checker/internal/app"
 	"website-checker/internal/checker"
 	"website-checker/internal/config"
+	"website-checker/internal/i18n"
 
 	"github.com/gen2brain/beeep"
 )
 
-func Init(appName string) {
+var cfg *config.Config
+
+func Init(appName string, globalConfig *config.Config) {
 	beeep.AppName = appName
+	cfg = globalConfig
 }
 
-func SendSuccess(config *config.Config) {
-	if !config.Notifications.ShowPopup {
+func SendSuccess() {
+	if !cfg.Notifications.ShowPopup {
 		return
 	}
-
-	title := "Проверка доступности"
-	msg := "✅ Все сайты работают нормально!"
+	title := i18n.T("success_title")
+	msg := i18n.T("success_msg")
 
 	beeep.Notify(title, msg, app.IconGood)
 }
 
-func SendFail(config *config.Config, failedResults []checker.CheckResult) {
-	if !config.Notifications.ShowPopup || len(failedResults) == 0 {
+func SendFail(failedResults []checker.CheckResult) {
+	if !cfg.Notifications.ShowPopup || len(failedResults) == 0 {
 		return
 	}
-	beeep.AppName = app.AppName
-	title := "Проверка доступности"
-	msg := "⚠️ Обнаружены проблемы с сайтами:\n\n"
+	
+	title := i18n.T("fail_title")
+	msg := ""
 	for _, result := range failedResults {
-		statusText := "ОШИБКА"
-		if result.StatusCode > 0 {
-			statusText = fmt.Sprintf("Статус: %d", result.StatusCode)
-		}
+		
 		duration := result.Duration.Round(time.Millisecond)
 		msg += fmt.Sprintf("• %s: %s (время: %v)\n",
-			result.Site.Name, statusText, duration)
+			result.Site.Name, result.Error, duration)
 	}
+	msg = i18n.T("fail_msg", "sites", msg)
 	beeep.Alert(title, msg, app.IconBad)
 }
 
-func SendConfigLoaded(config config.Config) {
-	if !config.Notifications.ShowPopup {
+func SendConfigLoaded() {
+	if !cfg.Notifications.ShowPopup {
 		return
 	}
-	title := "Проверка конфигурации"
-	msg := fmt.Sprintf("Загружено %d сайтов для проверки\n", len(config.Sites))
+	title := i18n.T("config_load_title")
+	msg := i18n.T("config_load_msg", "count", len(cfg.Sites))
 
 	beeep.Notify(title, msg, app.IconGood)
 }
 
 func ShowLog(lastCheckResult string) {
-	// Показать лог проверок
-	beeep.Alert("История проверок", lastCheckResult, "")
+	if !cfg.Notifications.ShowPopup {
+		return
+	}
+	title := i18n.T("log_title")
+	beeep.Alert(title, lastCheckResult, "")
 }
 
-func Error(title string, msg string) {
-	beeep.Alert("Ошибка", msg, app.IconBad)
+func Error(msg string) {
+	title := i18n.T("error_title")
+	beeep.Alert(title, msg, app.IconBad)
 }

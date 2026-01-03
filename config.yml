@@ -14,4 +14,5 @@ notifications:
 general:
   check_interval: 3600
   concurrent_checks: 3
+  lang: ru # en | ru
   autostart: true # Автоматический запуск программы при старте системы. По умолчанию true. NOT IMPLEMENTED

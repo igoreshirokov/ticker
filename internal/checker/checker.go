@@ -2,13 +2,13 @@ package checker
 
 import (
 	"crypto/tls"
-	"fmt"
 	"io"
 	"net/http"
 	"sync"
 	"time"
 
 	"website-checker/internal/config"
+	"website-checker/internal/i18n"
 )
 
 type CheckResult struct {
@@ -34,7 +34,8 @@ func CheckSite(site *config.SiteConfig) CheckResult {
 		return CheckResult{
 			Site:     *site,
 			Success:  false,
-			Error:    fmt.Sprintf("Ошибка создания запроса: %v", err),
+			Error:    i18n.T("error_create_request", err),
+
 			Duration: time.Since(start),
 		}
 	}
@@ -45,7 +46,7 @@ func CheckSite(site *config.SiteConfig) CheckResult {
 		return CheckResult{
 			Site:     *site,
 			Success:  false,
-			Error:    fmt.Sprintf("Ошибка соединения: %v", err),
+			Error:    i18n.T("error_connection", err),
 			Duration: time.Since(start),
 		}
 	}
@@ -57,7 +58,7 @@ func CheckSite(site *config.SiteConfig) CheckResult {
 			Site:       *site,
 			Success:    false,
 			StatusCode: resp.StatusCode,
-			Error:      fmt.Sprintf("Ошибка чтения ответа: %v", err),
+			Error:      i18n.T("error_read_response", err),
 			Duration:   time.Since(start),
 		}
 	}

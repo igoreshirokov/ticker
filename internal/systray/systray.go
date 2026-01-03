@@ -9,6 +9,7 @@ import (
 	"website-checker/internal/app"
 	"website-checker/internal/checker"
 	"website-checker/internal/config"
+	"website-checker/internal/i18n"
 	"website-checker/internal/notification"
 
 	"github.com/getlantern/systray"
@@ -41,24 +42,28 @@ func runWithTray() {
 func onReady() {
 	// Устанавливаем иконку
 	systray.SetIcon(app.IconGood)
-	systray.SetTitle("Проверка доступности")
-	systray.SetTooltip("Мониторинг сайтов")
+	// Переводим заголовок
+	systray.SetTitle(i18n.T("checker_title"))
+	// Переводим подсказку
+	systray.SetTooltip(i18n.T("checker_tooltip"))
 
-	// Добавляем пункты меню
-	mCheckNow := systray.AddMenuItem("Проверить сейчас", "Выполнить проверку")
-	mStatus := systray.AddMenuItem("Статус: Не проверялось", "Последний статус")
+	// Переводим пункты меню
+	mCheckNow := systray.AddMenuItem(i18n.T("checker_check_now"), i18n.T("checker_check_now_tooltip"))
+	mStatus := systray.AddMenuItem(i18n.T("checker_status_not_checked"), i18n.T("checker_status_not_checked_tooltip"))
 	mStatus.Disable()
 
 	systray.AddSeparator()
 
-	mSettings := systray.AddMenuItem("Настройки", "Открыть конфигурацию")
-	mViewLog := systray.AddMenuItem("Просмотр лога", "Показать историю проверок")
+	// Переводим пункты меню
+	mSettings := systray.AddMenuItem(i18n.T("checker_settings"), i18n.T("checker_settings_tooltip"))
+	mViewLog := systray.AddMenuItem(i18n.T("checker_view_log"), i18n.T("checker_view_log_tooltip"))
 
 	systray.AddSeparator()
 
-	mPause := systray.AddMenuItem("Пауза", "Приостановить проверки")
-	mRestart := systray.AddMenuItem("Перезапустить", "Перезапустить мониторинг")
-	mQuit := systray.AddMenuItem("Выход", "Завершить программу")
+	// Переводим пункты меню
+	mPause := systray.AddMenuItem(i18n.T("checker_pause"), i18n.T("checker_pause_tooltip"))
+	mRestart := systray.AddMenuItem(i18n.T("checker_restart"), i18n.T("checker_restart_tooltip"))
+	mQuit := systray.AddMenuItem(i18n.T("checker_quit"), i18n.T("checker_quit_tooltip"))
 
 	// Запускаем фоновую проверку
 	go backgroundChecker(mStatus)
@@ -142,16 +147,18 @@ func updateStatus(results []checker.CheckResult, statusItem *systray.MenuItem) {
 	if allOK {
 		systray.SetIcon(app.IconGood)
 		statusItem.SetIcon(app.IconGood)
-		statusItem.SetTitle(fmt.Sprintf("✅ OK (%s)", lastCheckTime.Format("15:04")))
+		// Переводим статус
+		statusItem.SetTitle(fmt.Sprintf(i18n.T("checker_status_ok"), lastCheckTime.Format("15:04")))
 		if cfg.Notifications.ShowPopup {
-			notification.SendSuccess(cfg)
+			notification.SendSuccess()
 		}
 	} else {
 		systray.SetIcon(app.IconBad)
 		statusItem.SetIcon(app.IconBad)
-		statusItem.SetTitle(fmt.Sprintf("⚠️ %d ошибок (%s)", len(failed), lastCheckTime.Format("15:04")))
+		// Переводим статус
+		statusItem.SetTitle(i18n.T("checker_status_error", len(failed), lastCheckTime.Format("15:04")))
 		if cfg.Notifications.ShowPopup {
-			notification.SendFail(cfg, failed)
+			notification.SendFail(failed)
 		}
 	}
 
@@ -194,9 +201,11 @@ func togglePause(menuItem *systray.MenuItem) {
 	mutex.Lock()
 	checking = !checking
 	if checking {
-		menuItem.SetTitle("Возобновить")
+		// Переводим пункт меню
+		menuItem.SetTitle(i18n.T("checker_resume"))
 	} else {
-		menuItem.SetTitle("Пауза")
+		// Переводим пункт меню
+		menuItem.SetTitle(i18n.T("checker_pause"))
 	}
 	mutex.Unlock()
 }

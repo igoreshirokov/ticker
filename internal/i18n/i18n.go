@@ -49,21 +49,17 @@ func T(key string, args ...interface{}) string {
 
 	// Заменяем плейсхолдеры вида {key} на значения
 	if len(args) > 0 && len(args)%2 == 0 {
-		r := strings.NewReplacer()
-		for i := 0; i < len(args); i += 2 {
-			placeholder := fmt.Sprintf("{%v}", args[i])
-			value := fmt.Sprintf("%v", args[i+1])
-			r.WriteString(placeholder)
-			r.WriteString(value)
-		}
-		// В новой версии Go strings.NewReplacer принимает слайс, что удобнее
-		// Здесь для совместимости оставлен старый вариант
+		// Создаем слайс для пар "старая строка, новая строка"
 		var replacerArgs []string
 		for i := 0; i < len(args); i += 2 {
+			// Формируем плейсхолдер, например "{count}"
 			placeholder := fmt.Sprintf("{%v}", args[i])
+			// Формируем значение, например "5"
 			value := fmt.Sprintf("%v", args[i+1])
+			// Добавляем пару в слайс
 			replacerArgs = append(replacerArgs, placeholder, value)
 		}
+		// Создаем Replacer со всеми парами и выполняем замену
 		return strings.NewReplacer(replacerArgs...).Replace(translation)
 	}
 
