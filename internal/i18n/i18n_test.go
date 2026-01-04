@@ -6,8 +6,7 @@ import (
 
 func TestTranslation(t *testing.T) {
 	err := Load("ru")
-	if err != nil 
-	{
+	if err != nil {
 		t.Fatalf("Не удалось загрузить файл перевода ru.json: %v", err)
 	}
 
