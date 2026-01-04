@@ -5,10 +5,9 @@ import (
 )
 
 func TestTranslation(t *testing.T) {
-	// Шаг 1: Загружаем переводы для теста (например, русский)
 	err := Load("ru")
-	if err != nil {
-		// t.Fatalf прерывает тест и выводит ошибку
+	if err != nil 
+	{
 		t.Fatalf("Не удалось загрузить файл перевода ru.json: %v", err)
 	}
 

@@ -9,17 +9,13 @@ import (
 	"website-checker/internal/systray"
 )
 
-// Глобальные переменные для управления
 var (
 	cfg          *config.Config
 )
 
 func main() {
-	
-	// Загрузка конфигурации
 	cfg, configFilePath, err := config.Load()
 	if err != nil {
-		// Переводим сообщение об ошибке
 		notification.Error("Configuration file does not exist: " + err.Error())
 		os.Exit(1)
 	}
@@ -27,10 +23,8 @@ func main() {
 	i18n.Load(cfg.General.Lang)
 	app.AppName = i18n.T("app_name")
 
-	// Инициализация уведомлений
 	notification.Init(app.AppName, cfg)
 	notification.SendConfigLoaded()
 
-	// Запуск в режиме с иконкой в трее
 	systray.Run(cfg, *configFilePath)
 }
