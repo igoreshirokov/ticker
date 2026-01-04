@@ -42,25 +42,20 @@ func runWithTray() {
 func onReady() {
 	// Устанавливаем иконку
 	systray.SetIcon(app.IconGood)
-	// Переводим заголовок
 	systray.SetTitle(i18n.T("checker_title"))
-	// Переводим подсказку
 	systray.SetTooltip(i18n.T("checker_tooltip"))
 
-	// Переводим пункты меню
 	mCheckNow := systray.AddMenuItem(i18n.T("checker_check_now"), i18n.T("checker_check_now_tooltip"))
 	mStatus := systray.AddMenuItem(i18n.T("checker_status_not_checked"), i18n.T("checker_status_not_checked_tooltip"))
 	mStatus.Disable()
 
 	systray.AddSeparator()
 
-	// Переводим пункты меню
 	mSettings := systray.AddMenuItem(i18n.T("checker_settings"), i18n.T("checker_settings_tooltip"))
 	mViewLog := systray.AddMenuItem(i18n.T("checker_view_log"), i18n.T("checker_view_log_tooltip"))
 
 	systray.AddSeparator()
 
-	// Переводим пункты меню
 	mPause := systray.AddMenuItem(i18n.T("checker_pause"), i18n.T("checker_pause_tooltip"))
 	mRestart := systray.AddMenuItem(i18n.T("checker_restart"), i18n.T("checker_restart_tooltip"))
 	mQuit := systray.AddMenuItem(i18n.T("checker_quit"), i18n.T("checker_quit_tooltip"))
@@ -147,7 +142,6 @@ func updateStatus(results []checker.CheckResult, statusItem *systray.MenuItem) {
 	if allOK {
 		systray.SetIcon(app.IconGood)
 		statusItem.SetIcon(app.IconGood)
-		// Переводим статус
 		statusItem.SetTitle(fmt.Sprintf(i18n.T("checker_status_ok"), lastCheckTime.Format("15:04")))
 		if cfg.Notifications.ShowPopup {
 			notification.SendSuccess()
@@ -155,7 +149,6 @@ func updateStatus(results []checker.CheckResult, statusItem *systray.MenuItem) {
 	} else {
 		systray.SetIcon(app.IconBad)
 		statusItem.SetIcon(app.IconBad)
-		// Переводим статус
 		statusItem.SetTitle(i18n.T("checker_status_error", len(failed), lastCheckTime.Format("15:04")))
 		if cfg.Notifications.ShowPopup {
 			notification.SendFail(failed)
@@ -201,10 +194,8 @@ func togglePause(menuItem *systray.MenuItem) {
 	mutex.Lock()
 	checking = !checking
 	if checking {
-		// Переводим пункт меню
 		menuItem.SetTitle(i18n.T("checker_resume"))
 	} else {
-		// Переводим пункт меню
 		menuItem.SetTitle(i18n.T("checker_pause"))
 	}
 	mutex.Unlock()
